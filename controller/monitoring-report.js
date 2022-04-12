@@ -1,44 +1,80 @@
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
 const ReportModel = require('../models/monitoring-report')
-var ObjectId = require('mongodb').ObjectId;
-const aws = require("aws-sdk");
+const AWS = require("aws-sdk");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
+const { Blob } = require('buffer') ;
+const fs = require('fs');
 
-exports.RegisterReport2 = async (req, res) => {
-   
-    const space = new aws.S3({
-        endpoint: process.env.DO_SPACE_ENDPOINT,
-        useAccelerateEndpoint: false,
-        credentials: new aws.Credentials(process.env.DO_SPACE_KEY, process.env.DO_SPACE_SECRET, null)
-      });
-      
-      const bucket = process.env.DO_SPACE_NAME;
+const spacesEndpoint = new AWS.Endpoint('fra1.digitaloceanspaces.com');
+const s3 = new AWS.S3({
+    endpoint: spacesEndpoint,
+    accessKeyId: 'WSSYGSEZ5EA7Z4S6QKPD',
+    secretAccessKey: 'w15/uYDXVevhxHARVfAlz1DSbLO37YhDE1sDrY4iRGw'
+});
 
-     
+const upload = multer({
 
+    storage: multerS3({
+      s3,
+      bucket: 'lasubeb/tep-dashboard',
+      acl: 'public-read',
+      contentType: multerS3.AUTO_CONTENT_TYPE,
+      key: function (req, file, cb) {
+        cb(null, `${Date.now().toString()}${file.originalname}`);
+      }, 
+    }),
+  }).array('images');
+
+exports.RegisterReport = async (req, res) => {
+    
     try{
+        
 
-        for(let i = 0; i < req.body.images.length; i++){
-
-            const fileStr = req.body.images[i];
-
-            const uploadParams = {
-                Bucket: bucket,
-                Body: fileStr,
-                ACL: 'public-read',
-                Key: fileStr.originalname
+        upload(req, res, (err) => {
+            if (err) {
+              console.log(err);
+              let error;
+              if (err.name === 'MulterError') {
+                error = err.code;
+              } else {
+                error = err;
               }
-
-              space.upload(uploadParams, function (error, data) {
-                if (error) {
-                  console.log(error);
-                  res.sendStatus(500);
-                }
-                console.log("Successfully Uploaded Image to DO");
-              });
+              return res.status(400).json({ success: false, message: error });
+            }
+            // const url = req.files.location;
+            const responses = [];
+          for (let index = 0; index < req.files.length; index++) {
+              responses.push(`${req.files[index].location.split('digitaloceanspaces.com')[0]}cdn.digitaloceanspaces.com${
+                req.files[index].location.split('digitaloceanspaces.com')[1]
+            }`)
+            console.log(
+                `${req.files[index].location.split('digitaloceanspaces.com')[0]}cdn.digitaloceanspaces.com${
+                    req.files[index].location.split('digitaloceanspaces.com')[1]
+                }`
+              );
+          }
+       
+           
+          setTimeout(async () => {
+            console.log( "eeduai", responses)
+            const result = new ReportModel({
+                "lgea": req.body.lgea,
+                "expected": req.body.expected,
+                "completed": req.body.completed,
+                "project": req.body.project,
+                "year": req.body.year,
+                "volunteer_id": req.body.volunteer_id,
+                "images": responses
+            })
+            await result.save();
+           res.status(200).json({ message: 'File uploaded successfully.' });
+         }, 5000); 
             
-          }    
-         
+          });
+      
+        
     }
     catch(e){
         console.log(e)
@@ -47,7 +83,7 @@ exports.RegisterReport2 = async (req, res) => {
 
 }
 
-exports.RegisterReport = async (req, res) => {
+exports.RegisterReport2 = async (req, res) => {
     
     cloudinary.config({
         cloud_name: process.env.CLOUDINARY_NAME,
@@ -98,6 +134,21 @@ const responses = [];
 
 }
 
+
+exports.RegisterManyReport = async (req, res) => {
+    try{
+       
+        await ReportModel.insertMany(req.body)
+            
+
+        res.status(201).send({message: "Successful"})
+    }
+    catch(e){
+        console.log(e)
+        res.status(400).send({ error: 'Error creating Monitoring Report'})
+    }
+
+}
 exports.getReport = async (req, res) => {
     try {
         const isdown = await ReportModel.find({year: req.body.year}).populate('volunteer_id' , 'first_name last_name');

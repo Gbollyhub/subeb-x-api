@@ -1,46 +1,71 @@
-const { spawn } = require('child_process');
-const path = require('path');
-const cron = require('node-cron');
+var fs = require('fs');
+var _ = require('lodash');
+var exec = require('child_process').exec;
 
-/* 
-Basic mongo dump and restore commands, they contain more options you can have a look at man page for both of them.
-1. mongodump --db=lasubeb --archive=./rbac.gzip --gzip
-2. mongorestore --db=lasubeb --archive=./rbac.gzip --gzip
-Using mongodump - without any args:
-  will dump each and every db into a folder called "dump" in the directory from where it was executed.
-Using mongorestore - without any args:
-  will try to restore every database from "dump" folder in current directory, if "dump" folder does not exist then it will simply fail.
-*/
+var dbOptions =  {
+user: 'alias',
+pass: 'gbolly',
+host: 'localhost',
+port: 27017,
+database: 'lasubeb',
+autoBackup: true, 
+removeOldBackup: true,
+keepLastDaysBackup: 2,
+autoBackupPath: 'C:/Users/User01/Documents/lasubeb-api/backup' // i.e. /var/database-backup/
+};
 
-const DB_NAME = 'lasubeb';
-const ARCHIVE_PATH = path.join(__dirname, 'public', `${DB_NAME}.gzip`);
+	/* return date object */
+exports.stringToDate = function (dateString) {
+    return new Date(dateString);
+}
+	
+	/* return if variable is empty or not. */
+exports.empty = function(mixedVar) {
+    var undef, key, i, len;
+    var emptyValues = [undef, null, false, 0, '', '0'];
+    for (i = 0, len = emptyValues.length; i < len; i++) {
+        if (mixedVar === emptyValues[i]) {
+        return true;
+        }
+    }
+    if (typeof mixedVar === 'object') {
+        for (key in mixedVar) {
+return false;
+        }
+        return true;
+    }
+    return false;
+};
 
-// 1. Cron expression for every 5 seconds - */5 * * * * *
-// 2. Cron expression for every night at 00:00 hours (0 0 * * * )
-// Note: 2nd expression only contains 5 fields, since seconds is not necessary
 
-// Scheduling the backup every 5 seconds (using node-cron)
-cron.schedule('*/5 * * * * *', () => backupMongoDB());
+	// Auto backup script
 
-function backupMongoDB() {
-  const child = spawn('mongodump', [
-    `--nsInclude=${DB_NAME}`,
-    `--archive=${ARCHIVE_PATH}`,
-    '--gzip',
-  ]);
+  exports.dbAutoBackUp = function () {
+// check for auto backup is enabled or disabled
+    if (dbOptions.autoBackup == true) {
+        var date = new Date();
+        var beforeDate, oldBackupDir, oldBackupPath;
+        currentDate = this.stringToDate(date); // Current date
+        var newBackupDir = currentDate.getFullYear() + '-' + (currentDate.getMonth() + 1) + '-' + currentDate.getDate();
+        var newBackupPath = dbOptions.autoBackupPath + 'mongodump-' + newBackupDir; // New backup path for current backup process
+        // check for remove old backup after keeping # of days given in configuration
+        if (dbOptions.removeOldBackup == true) {
+            beforeDate = _.clone(currentDate);
+            beforeDate.setDate(beforeDate.getDate() - dbOptions.keepLastDaysBackup); // Substract number of days to keep backup and remove old backup
+            oldBackupDir = beforeDate.getFullYear() + '-' + (beforeDate.getMonth() + 1) + '-' + beforeDate.getDate();
+            oldBackupPath = dbOptions.autoBackupPath + 'mongodump-' + oldBackupDir; // old backup(after keeping # of days)
+        }
+        var cmd = 'mongodump --host ' + dbOptions.host + ' --port ' + dbOptions.port + ' --db ' + dbOptions.database + ' --username ' + dbOptions.user + ' --password ' + dbOptions.pass + ' --out ' + newBackupPath; // Command for mongodb dump process
 
-  child.stdout.on('data', (data) => {
-    console.log('stdout:\n', data);
-  });
-  child.stderr.on('data', (data) => {
-    console.log('stderr:\n', Buffer.from(data).toString());
-  });
-  child.on('error', (error) => {
-    console.log('error:\n', error);
-  });
-  child.on('exit', (code, signal) => {
-    if (code) console.log('Process exit with code:', code);
-    else if (signal) console.log('Process killed with signal:', signal);
-    else console.log('Backup is successfull ✅');
-  });
+        exec(cmd,(error, stdout, stderr) =>{
+            if (this.empty(error)) {
+                // check for remove old backup after keeping # of days given in configuration
+              	if (dbOptions.removeOldBackup == true) {
+                    if (fs.existsSync(oldBackupPath)) {
+                        exec("rm -rf " + oldBackupPath, function (err) { });
+                    }
+                }
+            }
+        });
+    }
 }

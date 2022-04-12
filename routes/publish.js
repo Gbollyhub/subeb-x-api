@@ -4,7 +4,7 @@ const { Auth } = require('../middleware/auth')
 
 const router = new express.Router()
 
-router.post('/publish', Auth, postPublish)
+router.post('/publish', postPublish)
 
 router.get('/get-publish', getPublish)
 
