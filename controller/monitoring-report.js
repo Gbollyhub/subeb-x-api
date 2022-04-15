@@ -58,19 +58,21 @@ exports.RegisterReport = async (req, res) => {
        
            
           setTimeout(async () => {
-            console.log( "eeduai", responses)
+            
             const result = new ReportModel({
                 "lgea": req.body.lgea,
-                "expected": req.body.expected,
-                "completed": req.body.completed,
+                "school_name": req.body.school_name,
+                "school_category": req.body.school_category,
+                "stages": req.body.stages,
                 "project": req.body.project,
                 "year": req.body.year,
                 "volunteer_id": req.body.volunteer_id,
-                "images": responses
+                "images": responses,
+                "expected": req.body.expected
             })
             await result.save();
            res.status(200).json({ message: 'File uploaded successfully.' });
-         }, 5000); 
+         }, 3000); 
             
           });
       
@@ -173,52 +175,62 @@ exports.getReportByUser = async (req, res) => {
 
 
 exports.updateReport = async (req, res) => {
-    cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-    });
-    const _id = req.body._id
-    const updates = Object.keys(req.body)
+
     try{
-        const report = await ReportModel.findById(_id)
-        if(!report){
-            return res.status(404).send("Report does not exist")
-           }
-       
-      const responses = [];
+        
 
-        if(req.body.new_images.length > 0){
-        for(let i = 0; i < req.body.new_images.length; i++){
-
-            const fileStr = req.body.new_images[i];
-
-            const uploadResponse = await cloudinary.uploader.upload(fileStr, {
-
-                upload_preset: 'ml_default',
-            });
-            
-           responses.push(uploadResponse.url)
+        upload(req, res, async(err) => {
+            if (err) {
+              console.log(err);
+              let error;
+              if (err.name === 'MulterError') {
+                error = err.code;
+              } else {
+                error = err;
+              }
+              return res.status(400).json({ success: false, message: error });
+            }
+            // const url = req.files.location;
+            const responses = [];
+          for (let index = 0; index < req.files.length; index++) {
+              responses.push(`${req.files[index].location.split('digitaloceanspaces.com')[0]}cdn.digitaloceanspaces.com${
+                req.files[index].location.split('digitaloceanspaces.com')[1]
+            }`)
+            console.log(
+                `${req.files[index].location.split('digitaloceanspaces.com')[0]}cdn.digitaloceanspaces.com${
+                    req.files[index].location.split('digitaloceanspaces.com')[1]
+                }`
+              );
           }
-        }
-
+          const _id = req.body._id
+          const report = await ReportModel.findById(_id)
+          if(!report){
+              return res.status(404).send("Report does not exist")
+             }
+           
+          setTimeout(async () => {
             report.lgea= req.body.lgea;
-            report.expected= req.body.expected;
-            report.completed= req.body.completed;
+            report.school_name= req.body.school_name;
+            report.school_category= req.body.school_category;
+            report.stages= req.body.stages;
             report.project= req.body.project;
             report.year= req.body.year;
             report.volunteer_id= req.body.volunteer_id;
-            report.images= req.body.new_images.length > 0 ? responses : req.body.old_images;
-     
-    
-        await report.save();
-        res.status(200).send({message: "Updated Successfully"})
+            report.images= responses.length > 0 ? responses : req.body.old_images;
+
+            await report.save();
+           res.status(200).json({ message: 'Updating successfully.' });
+         }, 3000); 
+            
+          });
+      
         
     }
     catch(e){
         console.log(e)
         res.status(400).send({ error: 'Error updating Monitoring Report'})
     }
+ 
 
 }
 

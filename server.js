@@ -3,7 +3,6 @@ const cors = require('cors')
 const mongoose = require('mongoose')
 const app = express()
 
-
 // const url = 'mongodb://alias:gbolly@localhost:27017/?authMechanism=DEFAULT&tls=false&authSource=lasubeb';
 // mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
 // const db = mongoose.connection
@@ -31,6 +30,7 @@ app.use((req, res, next) => {
 
 app.use(cors())
 
+
 const userRoutes = require('./routes/users')
 const breakdownRoutes = require('./routes/breakdown')
 const reportRoutes = require('./routes/monitoring-report')
@@ -42,6 +42,7 @@ const PublishRoutes = require('./routes/publish')
 
 
 app.use(express.json())
+app.use(express.urlencoded())
 app.use(userRoutes)
 app.use(breakdownRoutes)
 app.use(reportRoutes)

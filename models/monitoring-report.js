@@ -10,17 +10,27 @@ const reportSchema = new mongoose.Schema(
          required: true,
          trim: true
      },
-     expected: {
+     stages: {
         type: Number,
         required: true,
         trim: true
     },
-    completed: {
-        type: Number,
+    school_name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    school_category: {
+        type: String,
         required: true,
         trim: true
     },
     project: {
+        type: Number,
+        required: true,
+        trim: true
+    },
+    expected: {
         type: Number,
         required: true,
         trim: true
