@@ -17,7 +17,7 @@ const breakdownSchema = new mongoose.Schema(
     },
      
      no_of_projects: {
-        type: Number,
+        type: String,
         required: true,
         trim: true
      },

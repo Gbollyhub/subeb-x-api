@@ -31,7 +31,7 @@ const projectDataSchema = new mongoose.Schema(
         trim: true
     },
     output: {
-        type: Number,
+        type: String,
         required: true,
         trim: true
     },

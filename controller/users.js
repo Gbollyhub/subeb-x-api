@@ -27,6 +27,7 @@ exports.Register = async (req, res) => {
 }
 
 exports.Login = async (req, res) => {
+    console.log(req.body)
     try {
         const user = await UserModel.findOne({ email_address: req.body.email_address })
 
