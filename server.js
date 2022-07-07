@@ -9,6 +9,10 @@ mongoose.connect('mongodb+srv://doadmin:06H7zx3u51n2Wm8N@db-mongodb-tep-lasubeb-
     console.log("Database connected")
 })
 
+// mongoose.connect('mongodb+srv://aliasgbolly:Gbolly16@lasubebcluster.zjqmm.mongodb.net/lasubeb?retryWrites=true&w=majority', {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true}).then( () => {
+//     console.log("Database connected")
+// })
+
 mongoose.connection.on("error", err => {
     console.log(`DB connection error : ${ err.message }`)
 })

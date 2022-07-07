@@ -1,5 +1,5 @@
 const express = require('express')
-const { Register, Login, updateUser, Logout ,getAllUsers} = require('../controller/users')
+const { Register, Login, updateUser, Logout ,getAllUsers, deleteUser} = require('../controller/users')
 const { Auth } = require('../middleware/auth')
 
 const router = new express.Router()
@@ -13,5 +13,7 @@ router.post('/login', Login)
 router.get('/logout',Auth, Logout)
 
 router.patch('/update-account',Auth, updateUser)
+
+router.delete('/delete-account',Auth, deleteUser)
 
 module.exports = router

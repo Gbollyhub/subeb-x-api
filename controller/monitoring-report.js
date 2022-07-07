@@ -1,6 +1,7 @@
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
 const ReportModel = require('../models/monitoring-report')
+const reportUploadModel = require('../models/report-upload')
 const AWS = require("aws-sdk");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
@@ -151,6 +152,7 @@ exports.RegisterManyReport = async (req, res) => {
     }
 
 }
+
 exports.getReport = async (req, res) => {
     try {
         const isdown = await ReportModel.find({year: req.body.year}).populate('volunteer_id' , 'first_name last_name');
@@ -258,6 +260,48 @@ exports.deleteReport = async (req, res) => {
 exports.deleteAllReport = async (req, res) => {
     try {
         const isdown = await  ReportModel.deleteMany({ year: req.query.year })
+        res.status(200).send({message: "Removal Successful"})
+    } catch (error) {
+        res.status(500).send({error:"Operation Failed"})
+    }
+
+}
+
+
+exports.RegisterUploadYear = async (req, res) => {
+    try{
+        const isExist = await reportUploadModel.findOne({ year: req.body.year })
+        console.log(isExist)
+        if(isExist){
+            return res.status(403).send({ error: "Report for this Year already exists"})
+        }
+
+        await reportUploadModel.insertMany(req.body)
+            
+
+        res.status(201).send({message: "Successful"})
+    }
+    catch(e){
+        console.log(e)
+        res.status(400).send({ error: 'Error creating report'})
+    }
+
+}
+
+exports.getUploadYear = async (req, res) => {
+
+    try {
+        const isdown = await reportUploadModel.find()
+        res.status(200).send(isdown)
+    } catch (error) {
+        res.status(500).send({error:"Operation Failed"})
+    }
+
+}
+
+exports.deleteUploadYear = async (req, res) => {
+    try {
+        await  reportUploadModel.findOneAndDelete({  _id: req.query.id })
         res.status(200).send({message: "Removal Successful"})
     } catch (error) {
         res.status(500).send({error:"Operation Failed"})

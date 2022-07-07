@@ -119,3 +119,13 @@ exports.getAllUsers = async (req, res) => {
         res.status(500).send(e)
     }
  }
+
+ exports.deleteUser = async (req, res) => {
+    try {
+        const isdown = await  UserModel.findOneAndDelete({  _id: req.query.id })
+        res.status(200).send({message: "Removal Successful"})
+    } catch (error) {
+        res.status(500).send({error:"Operation Failed"})
+    }
+
+}
