@@ -16,4 +16,4 @@ router.patch('/update-account',Auth, updateUser)
 
 router.delete('/delete-account',Auth, deleteUser)
 
-module.exports = router
+module.exports = router;
