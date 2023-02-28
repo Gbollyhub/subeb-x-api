@@ -5,11 +5,11 @@ const app = express()
 
 
 
-mongoose.connect('mongodb+srv://doadmin:06H7zx3u51n2Wm8N@db-mongodb-tep-lasubeb-1397f85b.mongo.ondigitalocean.com/admin?tls=true&authSource=admin', {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true}).then( () => {
-    console.log("Database connected")
-})
+// mongoose.connect('MONGO_CREDENTIALS', {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true}).then( () => {
+//     console.log("Database connected")
+// })
 
-// mongoose.connect('mongodb+srv://aliasgbolly:Gbolly16@lasubebcluster.zjqmm.mongodb.net/lasubeb?retryWrites=true&w=majority', {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true}).then( () => {
+// mongoose.connect('MONGO_CREDENTIALS', {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true}).then( () => {
 //     console.log("Database connected")
 // })
 
